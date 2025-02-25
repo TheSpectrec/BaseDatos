@@ -72,6 +72,42 @@ class ProductoService {
         }
         return producto;
     }
+
+    async updateProducto(id, producto) {
+        const productoById = await ProductoRepository.getProductoById(id);
+        if (!productoById) {
+            throw new Error('Producto no encontrado');
+        }
+        if (!producto.nombre || !producto.precio || !producto.fechaAdquisicion || !producto.numSerie) {
+            throw new Error('Los datos del producto son requeridos');
+        }
+        if(producto.precio < 1) {
+            throw new Error('El precio debe ser mayor a 0');
+        }
+        if (!Validaciones.esFechaValida(producto.fechaAdquisicion)) {
+            throw new Error('La fecha de adquisición no es válida');
+        }
+        const productoByNumSerieAndNotId = await ProductoRepository.getProductoByNumSerieAndNotId(producto.numSerie, id);
+        if (productoByNumSerieAndNotId) {
+            throw new Error('El número de serie ya existe');
+        }
+        return await ProductoRepository.updateProducto(id, producto);    
+    }
+
+    async deleteProducto(id) {
+        const producto = await ProductoRepository.getProductoById(id);
+        if (!producto) {
+            throw new Error('Producto no encontrado');
+        }
+        return await ProductoRepository.deleteProducto(id);
+    }
+
+    async deleteProductoByNumSerie(numSerie) {      
+        if (!numSerie) {
+            throw new Error('El número de serie es requerido');
+        }
+        return await ProductoRepository.deleteProductoByNumSerie(numSerie);
+    }
 }
 
 module.exports = new ProductoService();

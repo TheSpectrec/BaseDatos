@@ -30,6 +30,14 @@ class ProductoRepository {
         const fechaFin = new Date (`${year}-12-31T23:59:59.999Z`);
         return await Producto.countDocuments({fechaAdquisicion: {$gte: fechaInicio, $lte: fechaFin}});
     }
+
+    async getProductoByNumSerieAndNotId(numSerie, id) {
+        return await Producto.findOne({ numSerie: numSerie, _id: { $ne: id } });
+    }    
+
+    async deleteProductoByNumSerie(numSerie) {
+        return await Producto.deleteOne({ numSerie: numSerie });
+    }
 }
 // Vamos a crear un numero de inventario aleatorio, el año de adquisicion-numero consecutivo(001)
 module.exports = new ProductoRepository();
