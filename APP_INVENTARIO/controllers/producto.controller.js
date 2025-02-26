@@ -75,51 +75,6 @@ class ProductoController {
             res.status(400).json({ message: error.message });
         }
     }
-
-    async updateProducto(req, res) {
-        try {
-            const producto = await ProductoService.updateProducto(req.params.id, req.body);
-            res.json(producto);
-        } catch (error) {
-            res.status(400).json({ message: error.message });
-        }
-    }
-
-    async deleteProducto(req, res) {
-        try {
-            const productoId = req.params.id;
-            if (!productoId) {
-                throw new Error('El ID del producto es requerido');
-            }
-
-            const producto = await ProductoService.deleteProducto(productoId);
-            if (!producto) {
-                return res.status(404).json({ message: "Producto no encontrado" });
-            }
-
-            res.json({ message: "Producto eliminado correctamente" });
-        } catch (error) {
-            res.status(400).json({ message: error.message });
-        }
-    }
-
-    async deleteProductoByNumSerie(req, res) {
-        try {
-            const numSerie = req.params.numSerie;
-            if (!numSerie) {
-                throw new Error('El número de serie es requerido');
-            }
-
-            const producto = await ProductoService.deleteProductoByNumSerie(numSerie);
-            if (!producto) {
-                return res.status(404).json({ message: "Producto no encontrado" });
-            }
-
-            res.json({ message: "Producto eliminado correctamente" });
-        } catch (error) {
-            res.status(400).json({ message: error.message });
-        }
-    }
 }
 
 module.exports = new ProductoController();
