@@ -1,125 +1,72 @@
-const ProductoService = require('../services/producto.service');
+const personaRepository = require("../repositories/persona.repository");
+const PersonaService = require('../services/persona.service');
 
-class ProductoController { 
+class PersonaController {
+    async getAllPersonas(req, res){
+        try{
+            const personas = await PersonaService.getAllPersonas();
+            // Por defecto retorna 200 si no se le especifica el status
+            // 200 -> éxito | OK
+            res.status(200).json(personas);
+        }catch(error){
+            res.status(400).json({message: error.message});
+        }
+    }
 
-    async getAllProductos(req, res) {
+    async getPersonaById(req, res) {
         try {
-            const productos = await ProductoService.getAllProductos();
-            res.json(productos);
+            console.log(req.params);
+            //Validar que el id venga en la petición
+            const personaId = req.params.id;
+            //QUITARLE LA NEGACIÓN de !personaId == '
+            if (!personaId || personaId == '' || personaId == null || personaId == undefined) {
+                throw new Error('El id de la persona es requerido');
+            }
+            const persona = await PersonaService.getPersonaById(personaId);
+            res.json(persona);
+        } catch (error) {
+            res.status(400).json({ message: error.message });
+        }
+    }
+
+    async createPersona(req, res){
+        try {
+            const persona = await PersonaService.createPersona(req.body);
+            res.json(persona);
         } catch (error) {
             res.status(400).json({message: error.message});
         }
     }
-    
-    async getProductoById(req, res) {
-        try {
-            console.log(req.params);
+
+    async updatePersona(req, res){
+        try{
             //Validar que el id venga en la petición
-            const productoId = req.params.id;
-            //QUITARLE LA NEGACIÓN de !personaId == '
-            if (!productoId || productoId == '' || productoId == null || productoId == undefined) {
-                throw new Error('El id del producto es requerido');
+            const personaId = req.params.id;
+            if (!personaId || personaId == '' || personaId == null || personaId == undefined) {
+                throw new Error('El id de la persona es requerido');
             }
-            const producto = await ProductoService.getProductoById(productoId);
-            res.json(producto);
-        } catch (error) {
-            res.status(400).json({ message: error.message });
+
+            const persona = await PersonaService.updatePersona(personaId, req.body);
+            res.json(persona);
+        }catch(error){
+            res.status(400).json({message: error.message});
         }
     }
 
-    async createProducto(req, res) {
+    async deletePersona(req, res) {
         try {
-            if (!req.body || Object.keys(req.body).length === 0) {
-                throw new Error('Los datos del producto son requeridos');
+            const personaId = req.params.id;
+            if (!personaId) {
+                throw new Error('El id de la persona es requerido');
             }
-
-            const producto = await ProductoService.createProducto(req.body);
-            res.status(201).json(producto);
+    
+            await PersonaService.deletePersona(personaId);
+            res.status(200).json({ message: 'Persona eliminada correctamente' });
         } catch (error) {
             res.status(400).json({ message: error.message });
         }
     }
-
-    async getProductoById(req, res) {
-        try {
-            const productoId = req.params.id;
-            if (!productoId) {
-                throw new Error('El ID del producto es requerido');
-            }
-
-            const producto = await ProductoService.getProductoById(productoId);
-            if (!producto) {
-                return res.status(404).json({ message: "Producto no encontrado" });
-            }
-
-            res.json(producto);
-        } catch (error) {
-            res.status(400).json({ message: error.message });
-        }
-    }
-
-    async getProductoByNumSerie(req, res) {
-        try {
-            const numSerie = req.params.numSerie;
-            if (!numSerie) {
-                throw new Error('El número de serie es requerido');
-            }
-
-            const producto = await ProductoService.getProductoByNumSerie(numSerie);
-            if (!producto) {
-                return res.status(404).json({ message: "Producto no encontrado con ese número de serie" });
-            }
-
-            res.json(producto);
-        } catch (error) {
-            res.status(400).json({ message: error.message });
-        }
-    }
-
-    async updateProducto(req, res) {
-        try {
-            const producto = await ProductoService.updateProducto(req.params.id, req.body);
-            res.json(producto);
-        } catch (error) {
-            res.status(400).json({ message: error.message });
-        }
-    }
-
-    async deleteProducto(req, res) {
-        try {
-            const productoId = req.params.id;
-            if (!productoId) {
-                throw new Error('El ID del producto es requerido');
-            }
-
-            const producto = await ProductoService.deleteProducto(productoId);
-            if (!producto) {
-                return res.status(404).json({ message: "Producto no encontrado" });
-            }
-
-            res.json({ message: "Producto eliminado correctamente" });
-        } catch (error) {
-            res.status(400).json({ message: error.message });
-        }
-    }
-
-    async deleteProductoByNumSerie(req, res) {
-        try {
-            const numSerie = req.params.numSerie;
-            if (!numSerie) {
-                throw new Error('El número de serie es requerido');
-            }
-
-            const producto = await ProductoService.deleteProductoByNumSerie(numSerie);
-            if (!producto) {
-                return res.status(404).json({ message: "Producto no encontrado" });
-            }
-
-            res.json({ message: "Producto eliminado correctamente" });
-        } catch (error) {
-            res.status(400).json({ message: error.message });
-        }
-    }
+    
 }
 
-module.exports = new ProductoController();
+module.exports = new PersonaController();
