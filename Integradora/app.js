@@ -1,32 +1,22 @@
-const express = require("express");
-const mongoose = require("mongoose");
-const userRoutes = require("./routes/user.routes");
-const houseRoutes = require("./routes/house.routes");
-const visitRoutes = require("./routes/visit.routes");
-const visitTypeRoutes = require("./routes/visitType.routes");
-const roleRoutes = require("./routes/role.routes");
-const authenticationRoutes = require("./routes/authentication.routes");
-const bodyParser = require("body-parser");
+import express from "express";
+import cors from "cors";
+import { connectDB } from "./src/database.js";
+import morgan from "morgan";
+import houseRoutes from "./src/routes/house.routes.js";
 
+connectDB(); //funcion para coneccion a la base de datos
 const app = express();
-const PORT = 3000;
+app.set("port", 4000); //Habilitar puerto 4000
 
-app.use(bodyParser.json());
-
+app.use(morgan("dev")); //registrar y analizar solicitudes y respuestas HTTP
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json()); // todas las peticiones se combierten en Json
+app.use(cors({ origin: "*" })); //resivir peticiones de cualquier lado
 
 // Rutas
-app.use("/auth", authenticationRoutes);
-app.use("/users", userRoutes);
-app.use("/houses", houseRoutes);
-app.use("/visits", visitRoutes);
-app.use("/visit-types", visitTypeRoutes);
-app.use("/roles", roleRoutes);
+app.use("/api/houses", houseRoutes);
+app.use("/uploads", express.static("uploads"));
 
-// Conexión a la base de datos
-mongoose.connect('mongodb+srv://20233tn111:azB3acGGi0wRLh7p@practica.m6rej.mongodb.net/inventario-db?retryWrites=true&w=majority&appName=Practica', {useNewUrlParser: true, useUnifiedTopology: true}).then(() =>{
-    console.log('Conexión exitosa a la base de datos a MongoDB');
-    app.listen(PORT, () => console.log(`Servidor corriendo en http://localhost:${PORT}`));
-    })
-    .catch((err) => console.log('Error al conectar en MongoDB', err));
-
-//---------------------------------------------
+app.listen(app.get("port"), () => { //Servidor escuchando 
+    console.log(`Hola tu aplicacion esta escuchando por el puerto' ${app.get("port")}`);
+  });

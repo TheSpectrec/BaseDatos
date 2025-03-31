@@ -1,0 +1,2 @@
+_id,description,photo,address.street,address.city,address.zip,status,createdAt,updatedAt,__v
+67e198a50d7b9319c470516c,Casa con jardín,Pokéball.png,Calle 123,Ciudad X,12345,activo,2025-03-24T17:38:45.938Z,2025-03-24T17:38:45.938Z,0
