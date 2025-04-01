@@ -8,7 +8,9 @@ import * as Yup from "yup";
 import axios from "axios";
 
 const validationSchema = Yup.object({
-  calle: Yup.string().required("La dirección es obligatoria"),
+  calle: Yup.string().required("La calle es obligatoria"),
+  ciudad: Yup.string().required("La ciudad es obligatoria"),
+  codigoPostal: Yup.string().required("El código postal es obligatorio"),
   descripcion: Yup.string().required("La descripción es obligatoria")
 });
 
@@ -17,25 +19,25 @@ const CasaModal = ({ open, onClose, residence, onSave }) => {
   const [successMessage, setSuccessMessage] = useState(null);
   const [errorMessage, setErrorMessage] = useState(null);
 
-  const isEditMode = Boolean(residence);
+  const isEditMode = Boolean(residence && residence._id);
 
   const handleSubmit = async (values) => {
     try {
       const formData = new FormData();
-formData.append("street", values.calle);           // antes: "calle"
-formData.append("city", values.ciudad);            // antes: "ciudad"
-formData.append("zip", values.codigoPostal);       // antes: "codigoPostal"
-formData.append("description", values.descripcion);
-if (values.file) {
-  formData.append("photo", values.file);           // se mantiene igual
-}
+      formData.append("street", values.calle);
+      formData.append("city", values.ciudad);
+      formData.append("zip", values.codigoPostal);
+      formData.append("description", values.descripcion);
+      formData.append("status", values.enabled ? "activo" : "inactivo");
 
-      formData.append("enabled", values.enabled);      
+      if (values.file) {
+        formData.append("photo", values.file);
+      }
 
-      if (residence && residence.id) {
-        await axios.put(`http://localhost:4000/api/houses/update/${residence.id}`, formData);
+      if (isEditMode) {
+        await axios.put(`/api/houses/with-photo/${residence._id}`, formData);
       } else {
-        await axios.post("http://localhost:4000/api/houses/with-photo", formData);
+        await axios.post("/api/houses/with-photo", formData);
       }
 
       setSuccessMessage("Casa guardada correctamente");
@@ -46,13 +48,20 @@ if (values.file) {
       console.error("Error al guardar la casa:", error);
     }
   };
+  useEffect(() => {
+    if (!open) {
+      setPreviewImage(null); // ✅ Limpia la imagen cuando se cierra el modal
+    }
+  }, [open]);
+  
+
   const initialValues = {
-    calle: residence?.calle || "",
-    ciudad: residence?.ciudad || "",
-    codigoPostal: residence?.codigoPostal || "",
-    descripcion: residence?.descripcion || "",
+    calle: residence?.address?.street || "",
+    ciudad: residence?.address?.city || "",
+    codigoPostal: residence?.address?.zip || "",
+    descripcion: residence?.description || "",
     file: null,
-    enabled: residence?.enabled ?? true,
+    enabled: residence?.status === "activo"
   };
 
   useEffect(() => {
@@ -76,7 +85,7 @@ if (values.file) {
           onSubmit={handleSubmit}
           enableReinitialize
         >
-          {({ errors, touched, setFieldValue, values }) => (
+          {({ errors, touched, setFieldValue, values, handleChange }) => (
             <Form>
               <Grid container spacing={3}>
                 <Grid item xs={12} sm={6}>
@@ -93,8 +102,8 @@ if (values.file) {
                     fullWidth
                     name="ciudad"
                     label="Ciudad *"
-                    error={touched.calle && Boolean(errors.calle)}
-                    helperText={touched.calle && errors.calle}
+                    error={touched.ciudad && Boolean(errors.ciudad)}
+                    helperText={touched.ciudad && errors.ciudad}
                     sx={{ mt: 2 }}
                   />
                   <Field
@@ -102,8 +111,8 @@ if (values.file) {
                     fullWidth
                     name="codigoPostal"
                     label="Código Postal *"
-                    error={touched.calle && Boolean(errors.calle)}
-                    helperText={touched.calle && errors.calle}
+                    error={touched.codigoPostal && Boolean(errors.codigoPostal)}
+                    helperText={touched.codigoPostal && errors.codigoPostal}
                     sx={{ mt: 2 }}
                   />
                   <Field
@@ -115,18 +124,7 @@ if (values.file) {
                     helperText={touched.descripcion && errors.descripcion}
                     sx={{ mt: 2 }}
                   />
-                  {isEditMode && (
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={values.enabled}
-                          onChange={(e) => setFieldValue("enabled", e.target.checked)}
-                        />
-                      }
-                      label="Activo"
-                      sx={{ mt: 2 }}
-                    />
-                  )}
+                  
                 </Grid>
                 <Grid item xs={12} sm={6}>
                   <Button variant="outlined" component="label" sx={{ mb: 2 }}>

@@ -36,6 +36,12 @@ function ConfirmDeleteModal({ open, onClose, onConfirm, message, isActive }) {
     exit: { opacity: 0, scale: 0.9, transition: { duration: 0.2 } },
   };
 
+  const accion = isActive ? "deshabilitar" : "reactivar";
+  const color = isActive ? "error" : "success";
+  const iconColor = isActive ? "red" : "green";
+  const textoBoton = isActive ? "Deshabilitar" : "Activar";
+  const titulo = `¿Deseas ${accion} esta casa?`;
+
   return (
     <>
       <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -46,20 +52,16 @@ function ConfirmDeleteModal({ open, onClose, onConfirm, message, isActive }) {
             exit="exit"
             variants={animationVariants}
           >
-            <HighlightOffIcon sx={{ fontSize: 80, color: isActive ? "red" : "green" }} />
+            <HighlightOffIcon sx={{ fontSize: 80, color: iconColor }} />
           </motion.div>
           <Typography variant="h6" fontWeight="bold" sx={{ mt: 2 }}>
-            {isActive ? "¿Estás seguro de deshabilitar esta casa?" : "¿Deseas reactivar esta casa?"}
+            {titulo}
           </Typography>
           <Typography variant="body2">{message}</Typography>
         </DialogContent>
         <DialogActions sx={{ justifyContent: "center", paddingBottom: "20px" }}>
-          <Button
-            variant="contained"
-            color={isActive ? "error" : "success"}
-            onClick={handleConfirm}
-          >
-            {isActive ? "Deshabilitar" : "Activar"}
+          <Button variant="contained" color={color} onClick={handleConfirm}>
+            {textoBoton}
           </Button>
           <Button variant="outlined" onClick={onClose}>
             Cancelar

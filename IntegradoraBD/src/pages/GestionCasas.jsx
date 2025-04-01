@@ -6,6 +6,7 @@ import CasaTable from '../components/CasaTable';
 import CasaModal from '../components/CasaModal';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 import VisualizarCasaModal from '../components/VisualizarCasaModal';
+import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
 import axios from 'axios';
 
 const GestionCasas = () => {
@@ -14,31 +15,20 @@ const GestionCasas = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [filtroEstado, setFiltroEstado] = useState("todas");
+  const [paginaActual, setPaginaActual] = useState(1);
+  const casasPorPagina = 20;
 
   const fetchCasas = async () => {
     try {
-      const response = await axios.get("/api/houses/with-photo");
-      console.log("📦 Respuesta completa:", response);
-  
-      if (Array.isArray(response.data)) {
-        setCasas(response.data);
-      } else if (Array.isArray(response.data.data)) {
-        setCasas(response.data.data);
-      } else {
-        console.warn("⚠️ Formato inesperado:", response.data);
-        setCasas([]); // evitar errores si no es un array
-      }
+      const response = await axios.get('/api/houses');
+      const data = Array.isArray(response.data) ? response.data : response.data.data;
+      setCasas(data || []);
     } catch (error) {
-      console.error("❌ Error en fetchCasas:", error);
-      if (error.response) {
-        console.error("Respuesta del servidor:", error.response.data);
-      }
+      console.error("Error al obtener casas:", error);
       setCasas([]);
     }
   };
-  
-  
-  
 
   useEffect(() => {
     fetchCasas();
@@ -47,16 +37,16 @@ const GestionCasas = () => {
   const handleToggleStatus = async (casa) => {
     try {
       const formData = new FormData();
-      formData.append('calle', casa.calle);
-      formData.append('ciudad', casa.ciudad);
-      formData.append('codigoPostal', casa.codigoPostal);
-      formData.append('descripcion', casa.descripcion);
-      formData.append('enabled', !casa.enabled);
-      if (casa.imagen) {
-        formData.append('photo', casa.imagen);
+      formData.append('calle', casa.address?.street);
+      formData.append('ciudad', casa.address?.city);
+      formData.append('codigoPostal', casa.address?.zip);
+      formData.append('descripcion', casa.description);
+      formData.append('status', casa.status === "activo" ? "inactivo" : "activo");
+      if (casa.photo) {
+        formData.append('photo', casa.photo);
       }
 
-      await axios.put(`/api/houses/with-photo/${casa._id}`, formData);
+      await axios.put(`/api/houses/status/${casa._id}`, formData);
       fetchCasas();
     } catch (error) {
       console.error('Error al cambiar estado:', error);
@@ -91,9 +81,22 @@ const GestionCasas = () => {
   const handleConfirmDelete = async () => {
     if (!selectedCasa) return;
     await handleToggleStatus(selectedCasa);
+    await fetchCasas();
     setConfirmDeleteOpen(false);
-    setSelectedCasa(null);
   };
+
+  const casasFiltradas = casas.filter(casa => {
+    if (filtroEstado === "todas") return true;
+    return casa.status === filtroEstado;
+  });
+
+  const totalPaginas = Math.ceil(casasFiltradas.length / casasPorPagina);
+  const casasPaginadas = casasFiltradas.slice(
+    (paginaActual - 1) * casasPorPagina,
+    paginaActual * casasPorPagina
+  );
+
+  const cambiarPagina = (nuevaPagina) => setPaginaActual(nuevaPagina);
 
   return (
     <div style={{ display: 'flex' }}>
@@ -110,23 +113,46 @@ const GestionCasas = () => {
             width: '90%',
             maxWidth: '900px'
           }}>
-            <CrearButton onClick={() => setModalOpen(true)} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <CrearButton onClick={() => setModalOpen(true)} />
+              <FormControl sx={{ minWidth: 200 }}>
+                <InputLabel>Filtrar por estado</InputLabel>
+                <Select
+                  value={filtroEstado}
+                  label="Filtrar por estado"
+                  onChange={(e) => {
+                    setFiltroEstado(e.target.value);
+                    setPaginaActual(1); // Reinicia paginación al filtrar
+                  }}
+                >
+                  <MenuItem value="todas">Todas</MenuItem>
+                  <MenuItem value="activo">Activas</MenuItem>
+                  <MenuItem value="inactivo">Inactivas</MenuItem>
+                </Select>
+              </FormControl>
+            </div>
+
             <CasaTable
-              casas={casas}
+              casas={casasPaginadas}
               onEdit={handleEdit}
               onToggle={handleDeleteConfirm}
               onView={handleView}
+              paginaActual={paginaActual}
+              totalPaginas={totalPaginas}
+              onPaginaChange={cambiarPagina}
             />
           </div>
         </div>
       </div>
+
       <CasaModal open={modalOpen} onClose={handleModalClose} residence={selectedCasa} onSave={fetchCasas} />
       <VisualizarCasaModal open={viewModalOpen} onClose={handleViewClose} casa={selectedCasa} />
       <ConfirmDeleteModal
         open={confirmDeleteOpen}
         onClose={() => setConfirmDeleteOpen(false)}
         onConfirm={handleConfirmDelete}
-        message={`¿Deseas deshabilitar la casa ${selectedCasa?.descripcion}?`}
+        message={`Ubicación: ${selectedCasa?.address?.street}, ${selectedCasa?.address?.city}`}
+        isActive={selectedCasa?.status === "activo"}
       />
     </div>
   );
